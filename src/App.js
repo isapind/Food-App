@@ -7,17 +7,18 @@ import { validSearch } from "./utils/util";
 function App() {
   const [food, setFood] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsloading] = useState(true);
 
   useEffect(() => {
     getFood()
       .then((foodsFromAPI) => {
         setFood(foodsFromAPI);
+        setIsloading(false);
       })
       .catch((err) => {
         console.log(err);
       });
   }, []);
-
   const handleChange = (event) => {
     setSearchTerm(event.target.value);
   };
@@ -25,30 +26,35 @@ function App() {
   return (
     <div className="App">
       <main>
-        <form>
-          <label htmlFor="search">Search for your favourite food: </label>
-          <input
-            type="text"
-            id="search"
-            value={searchTerm}
-            onChange={handleChange}
-          />
-        </form>
+        {isLoading ? (
+          <div className="loader--div">
+            <div className="loader"></div>
+          </div>
+        ) : (
+          <>
+            <form>
+              <label htmlFor="search">Search for your favourite food: </label>
+              <input
+                type="text"
+                id="search"
+                value={searchTerm}
+                onChange={handleChange}
+              />
+            </form>
 
-        <ul className="foodList--ul">
-          {food.map((item) => {
-            if (searchTerm) {
-              if (
-                validSearch(item.name, searchTerm) ||
-                validSearch(item.origin, searchTerm)
-              ) {
-                return <FoodCard key={item.id} food={item} />;
-              }
-            } else {
-              return <FoodCard key={item.id} food={item} />;
-            }
-          })}
-        </ul>
+            <ul className="foodList--ul">
+              {food
+                .filter(
+                  (item) =>
+                    validSearch(item.name, searchTerm) |
+                    validSearch(item.origin, searchTerm)
+                )
+                .map((item) => {
+                  return <FoodCard key={item.id} food={item} />;
+                })}
+            </ul>
+          </>
+        )}
       </main>
     </div>
   );
