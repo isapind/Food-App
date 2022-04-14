@@ -2,61 +2,59 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import FoodCard from "./components/FoodCard";
 import { getFood } from "./utils/api";
+import { validSearch } from "./utils/util";
 
 function App() {
   const [food, setFood] = useState([]);
-  const [filteredFood, setFilteredFood] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsloading] = useState(true);
 
   useEffect(() => {
     getFood()
       .then((foodsFromAPI) => {
         setFood(foodsFromAPI);
+        setIsloading(false);
       })
       .catch((err) => {
         console.log(err);
       });
   }, []);
-
   const handleChange = (event) => {
-    const search = event.target.value.toLowerCase();
-    setSearchTerm(search);
-
-    const filteredFood = food.filter((item) => {
-      const lowered = item.name.toLowerCase();
-      return lowered.includes(search);
-    });
-    setFilteredFood(filteredFood);
+    setSearchTerm(event.target.value);
   };
 
   return (
     <div className="App">
       <main>
-        <form>
-          <label htmlFor="search">Search for your favourite food: </label>
-          <input
-            type="text"
-            id="search"
-            value={searchTerm}
-            onChange={handleChange}
-          />
-        </form>
+        {isLoading ? (
+          <div className="loader--div">
+            <div className="loader"></div>
+          </div>
+        ) : (
+          <>
+            <form>
+              <label htmlFor="search">Search for your favourite food: </label>
+              <input
+                type="text"
+                id="search"
+                value={searchTerm}
+                onChange={handleChange}
+              />
+            </form>
 
-        <ul className="foodList--ul">
-          {searchTerm.length > 0 ? (
-            filteredFood.length === 0 ? (
-              <p>Sorry, nothing matches that search</p>
-            ) : (
-              filteredFood.map((food) => {
-                return <FoodCard food={food} key={food.id}></FoodCard>;
-              })
-            )
-          ) : (
-            food.map((food) => {
-              return <FoodCard food={food} key={food.id}></FoodCard>;
-            })
-          )}
-        </ul>
+            <ul className="foodList--ul">
+              {food
+                .filter(
+                  (item) =>
+                    validSearch(item.name, searchTerm) |
+                    validSearch(item.origin, searchTerm)
+                )
+                .map((item) => {
+                  return <FoodCard key={item.id} food={item} />;
+                })}
+            </ul>
+          </>
+        )}
       </main>
     </div>
   );
